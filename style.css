@@ -1,3 +1,4 @@
+
 /* style.css: Dark Themed Glassmorphic Formal Design */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap');
 
@@ -57,6 +58,68 @@ header {
     z-index: 10;
     box-shadow: 0 3px 12px var(--shadow-glass);
     backdrop-filter: blur(12px);
+}
+/* ====================== LIQUID GLASS NAVBAR ====================== */
+.navbar {
+    width: 100%;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    /* Glassmorphism */
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+
+    /* Liquid glow */
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.navbar::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 220%;
+    height: 220%;
+    background: radial-gradient(
+        circle at 30% 30%,
+        rgba(0, 195, 255, 0.35),
+        rgba(0, 0, 0, 0)
+    );
+    animation: liquidMove 12s infinite linear;
+    pointer-events: none;
+}
+
+@keyframes liquidMove {
+    0%   { transform: rotate(0deg) translate(0,0); }
+    50%  { transform: rotate(180deg) translate(25px,-25px); }
+    100% { transform: rotate(360deg) translate(0,0); }
+}
+
+/* NAV BUTTONS */
+.nav-btn {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 8px 14px;
+    border-radius: 10px;
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    backdrop-filter: blur(4px);
+    transition: 0.3s ease;
+}
+
+.nav-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+.nav-btn.active {
+    background: rgba(0, 153, 255, 0.65);
+    border-color: #00d4ff;
 }
 
 .navbar {

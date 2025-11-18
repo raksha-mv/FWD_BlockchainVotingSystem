@@ -1,25 +1,29 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
     <title>Blockchain Voting System</title>
     <link rel="stylesheet" href="style.css">
+    
 </head>
 <body>
     <div class="background-animation"></div>
+<header>
+    <nav class="navbar">
+        <div class="logo">Blockchain Voting</div>
 
-    <header>
-        <nav class="navbar">
-            <h1 class="logo">Blockchain Voting System</h1>
-            <ul class="nav-links">
-                <li><a href="#home" class="nav-btn active" data-page="home">Home</a></li>
-                <li><a href="#register" class="nav-btn" data-page="register">Register</a></li>
-                <li><a href="#vote" class="nav-btn" data-page="vote" id="voteNavBtn" disabled>Vote</a></li>
-                <li><a href="#results" class="nav-btn" data-page="results">Results</a></li>
-            </ul>
-        </nav>
-    </header>
+        <div class="nav-links">
+            <button class="nav-btn active" onclick="showPage('home')">Home</button>
+            <button class="nav-btn" onclick="showPage('register')">Register</button>
+            <button class="nav-btn" onclick="showPage('vote')">Vote</button>
+            <button class="nav-btn" onclick="showPage('results')">Results</button>
+        </div>
+    </nav>
+</header>
+
 
     <main>
         <div class="content-container">

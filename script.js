@@ -4,254 +4,242 @@ let currentVoter = JSON.parse(localStorage.getItem('currentVoter')) || null;
 // IST Time utility
 function getCurrentIST() {
     const d = new Date();
-    // Convert UTC to IST (UTC+5:30)
-    return new Date(d.getTime() + (5.5 * 60 * 60 * 1000));
+    return new Date(d.getTime() + (5.5 * 60 * 60 * 1000)); // UTC+5:30
 }
 
 function isAfterResultsRelease() {
     const now = getCurrentIST();
-    // Today at 22:30 IST
     const release = new Date(now);
-    release.setHours(22, 35, 0, 0); // 10:35 pm IST
+    release.setHours(22, 35, 0, 0); // 10:35 PM IST
     return now >= release;
 }
 
-// Has current voter already voted?
 function hasVoted(voterId) {
     const votes = JSON.parse(localStorage.getItem('votes')) || [];
-    return votes.some(vote => vote.voterId === voterId);
+    return votes.some(v => v.voterId === voterId);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Enable voting if registered and has not voted
-    if (currentVoter) {
-        enableVoting();
-        // If already voted, disable vote form button
+/* -----------------------------------------
+   PAGE SWITCHING (UPDATED FOR YOUR HTML)
+--------------------------------------------- */
+function showPage(pageId) {
+    const pages = document.querySelectorAll('.page');
+    const navBtns = document.querySelectorAll('.nav-btn');
+
+    // Voting restrictions
+    if (pageId === 'vote') {
+        if (!currentVoter) {
+            alert("⚠️ Please register first.");
+            return;
+        }
         if (hasVoted(currentVoter.voterId)) {
-            disableVoteForm();
+            document.getElementById("voteLockedMessage").style.display = "none";
+            document.getElementById("voteContent").style.display = "block";
         }
     }
 
-    // Navigation tab system
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const pages = document.querySelectorAll('.page');
+    // Results visibility restriction
+    if (pageId === 'results' && !isAfterResultsRelease()) {
+        alert("⏳ Results will be available at 10:35 PM IST.");
+        return;
+    }
 
-    navButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const targetPage = btn.getAttribute('data-page');
-            // Show results only after release
-            if (targetPage === 'results' && !isAfterResultsRelease()) {
-                alert('Voting results for all candidates will be available at 10:30 pm IST.');
-                return;
-            }
-            // Voting protection logic
-            if (targetPage === 'vote') {
-                if (!currentVoter) {
-                    alert('⚠️ Please complete registration first before voting.');
-                    return;
-                }
-                if (hasVoted(currentVoter.voterId)) {
-                    alert('You have already cast your vote, thank you!');
-                    return;
-                }
-            }
-            navButtons.forEach(b => b.classList.remove('active'));
-            pages.forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            const targetId = btn.getAttribute('data-page');
-            const targetPageElement = document.getElementById(targetId);
-            if (targetPageElement) targetPageElement.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    });
+    // Switch pages
+    pages.forEach(p => p.classList.remove("active"));
+    document.getElementById(pageId).classList.add("active");
 
-    // Registration Form Handler
-    const registerForm = document.getElementById('registerForm');
+    // Update nav button highlight
+    navBtns.forEach(b => b.classList.remove("active"));
+    document.querySelector(`[onclick="showPage('${pageId}')"]`).classList.add("active");
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* -----------------------------------------
+   REGISTRATION SYSTEM
+--------------------------------------------- */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    if (currentVoter) {
+        enableVoting();
+        if (hasVoted(currentVoter.voterId)) disableVoteForm();
+    }
+
+    const registerForm = document.getElementById("registerForm");
     if (registerForm) {
-        registerForm.addEventListener('submit', function(e) {
+        registerForm.addEventListener("submit", (e) => {
             e.preventDefault();
-            const voterName = document.getElementById('voterName').value.trim();
-            const voterId = document.getElementById('voterId').value.trim();
-            const email = document.getElementById('email').value.trim();
-            const walletAddress = document.getElementById('walletAddress').value.trim();
-            if (!voterName || !voterId || !email || !walletAddress) {
-                showRegistrationStatus('All fields are required.', 'error');
+
+            const name = voterName.value.trim();
+            const voterId = document.getElementById("voterId").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const wallet = document.getElementById("walletAddress").value.trim();
+
+            if (!name || !voterId || !email || !wallet) {
+                showRegistrationStatus("All fields are required.", "error");
                 return;
             }
-            if (email.indexOf('@') === -1) {
-                showRegistrationStatus('Please enter a valid email address.', 'error');
+            if (!email.includes("@")) {
+                showRegistrationStatus("Enter a valid email.", "error");
                 return;
             }
-            const voterExists = registeredVoters.some(voter => voter.voterId === voterId);
-            if (voterExists) {
-                showRegistrationStatus('Voter ID already registered. Please use a different ID.', 'error');
+            if (registeredVoters.some(v => v.voterId === voterId)) {
+                showRegistrationStatus("Voter ID already exists.", "error");
                 return;
             }
+
             const newVoter = {
-                name: voterName,
-                voterId: voterId,
-                email: email,
-                walletAddress: walletAddress,
-                timestamp: new Date().toISOString()
+                name,
+                voterId,
+                email,
+                walletAddress: wallet,
+                timestamp: new Date().toISOString(),
             };
+
             registeredVoters.push(newVoter);
             currentVoter = newVoter;
-            localStorage.setItem('registeredVoters', JSON.stringify(registeredVoters));
-            localStorage.setItem('currentVoter', JSON.stringify(currentVoter));
-            showRegistrationStatus('✓ Registration successful! You can now vote.', 'success');
+            localStorage.setItem("registeredVoters", JSON.stringify(registeredVoters));
+            localStorage.setItem("currentVoter", JSON.stringify(currentVoter));
+
+            showRegistrationStatus("✓ Registration successful!", "success");
             enableVoting();
             registerForm.reset();
-            setTimeout(() => {
-                document.querySelector('[data-page="vote"]').click();
-            }, 2000);
+
+            setTimeout(() => showPage("vote"), 1200);
         });
     }
 
-    // Vote Form Handler
-    const voteForm = document.getElementById('voteForm');
+    const voteForm = document.getElementById("voteForm");
     if (voteForm) {
-        voteForm.addEventListener('submit', function(e) {
+        voteForm.addEventListener("submit", (e) => {
             e.preventDefault();
-            // Block if already voted
+
             if (hasVoted(currentVoter.voterId)) {
-                alert('You have already cast your vote, thank you!');
+                alert("You have already voted.");
                 disableVoteForm();
                 return;
             }
-            const selectedCandidate = document.querySelector('input[name="candidate"]:checked');
-            if (!selectedCandidate) {
-                alert('Please select a candidate.');
+
+            const selected = document.querySelector("input[name='candidate']:checked");
+            if (!selected) {
+                alert("Select a candidate.");
                 return;
             }
-            const candidateName = selectedCandidate.closest('.candidate-card').querySelector('h3').textContent;
-            const vote = {
+
+            const candidateName = selected.closest(".candidate-card").querySelector("h3").textContent;
+
+            let votes = JSON.parse(localStorage.getItem("votes")) || [];
+            votes.push({
                 voter: currentVoter.name,
                 voterId: currentVoter.voterId,
                 candidate: candidateName,
-                timestamp: new Date().toISOString()
-            };
-            let votes = JSON.parse(localStorage.getItem('votes')) || [];
-            votes.push(vote);
-            localStorage.setItem('votes', JSON.stringify(votes));
-            alert(`✓ Your vote for ${candidateName} has been recorded securely on the blockchain.`);
-            voteForm.reset();
+                timestamp: new Date().toISOString(),
+            });
+
+            localStorage.setItem("votes", JSON.stringify(votes));
+
+            alert(`Vote submitted for ${candidateName}`);
             disableVoteForm();
+            voteForm.reset();
+
             setTimeout(() => {
-                if (isAfterResultsRelease()) {
-                    document.querySelector('[data-page="results"]').click();
-                } else {
-                    alert('Results will be available at 10:30 pm IST.');
-                }
-            }, 1500);
+                if (isAfterResultsRelease()) showPage("results");
+                else alert("Results available at 10:35 PM IST.");
+            }, 1000);
         });
     }
+
     updateResults();
-    // Hide results section until release
+
     if (!isAfterResultsRelease()) {
-        document.getElementById('results').style.display = 'none';
+        document.getElementById("results").style.display = "none";
     }
-    // At 10:30 pm IST, show results automatically
-    let checkInterval = setInterval(() => {
+
+    setInterval(() => {
         if (isAfterResultsRelease()) {
-            document.getElementById('results').style.display = '';
+            document.getElementById("results").style.display = "";
             updateResults();
-            clearInterval(checkInterval);
         }
-    }, 20000); // check every 20s
+    }, 20000);
 });
 
-// Disable vote form after vote
+/* -----------------------------------------
+   VOTING ENABLE/DISABLE
+--------------------------------------------- */
+
 function disableVoteForm() {
-    const voteForm = document.getElementById('voteForm');
-    if (voteForm) {
-        const btn = voteForm.querySelector('button[type=\"submit\"]');
-        btn.disabled = true;
-        btn.textContent = 'You have voted!';
-        btn.style.opacity = '0.6';
-        btn.style.cursor = 'not-allowed';
-        voteForm.querySelectorAll('input').forEach(inp => inp.disabled = true);
-    }
+    const form = document.getElementById("voteForm");
+    if (!form) return;
+
+    const btn = form.querySelector("button[type='submit']");
+    btn.disabled = true;
+    btn.textContent = "You have voted!";
+    btn.style.opacity = "0.6";
+    form.querySelectorAll("input").forEach(i => i.disabled = true);
 }
 
 function enableVoting() {
-    const voteNavBtn = document.getElementById('voteNavBtn');
-    const voteLockedMessage = document.getElementById('voteLockedMessage');
-    const voteContent = document.getElementById('voteContent');
-    const registeredVoterName = document.getElementById('registeredVoterName');
-    voteNavBtn.disabled = false;
-    voteNavBtn.style.opacity = '1';
-    voteNavBtn.style.cursor = 'pointer';
-    voteLockedMessage.style.display = 'none';
-    voteContent.style.display = 'block';
-    if (currentVoter) {
-        registeredVoterName.textContent = currentVoter.name;
-    }
+    if (!currentVoter) return;
+
+    document.getElementById("voteLockedMessage").style.display = "none";
+    document.getElementById("voteContent").style.display = "block";
+    document.getElementById("registeredVoterName").textContent = currentVoter.name;
 }
-function disableVoting() {
-    const voteNavBtn = document.getElementById('voteNavBtn');
-    const voteLockedMessage = document.getElementById('voteLockedMessage');
-    const voteContent = document.getElementById('voteContent');
-    voteNavBtn.disabled = true;
-    voteNavBtn.style.opacity = '0.5';
-    voteNavBtn.style.cursor = 'not-allowed';
-    voteLockedMessage.style.display = 'block';
-    voteContent.style.display = 'none';
+
+/* -----------------------------------------
+   STATUS + RESULTS
+--------------------------------------------- */
+
+function showRegistrationStatus(msg, type) {
+    const el = document.getElementById("registrationStatus");
+    el.textContent = msg;
+    el.className = `status-message ${type}`;
 }
-function showRegistrationStatus(message, type) {
-    const statusElement = document.getElementById('registrationStatus');
-    statusElement.textContent = message;
-    statusElement.className = `status-message ${type}`;
-}
+
 function goToRegister() {
-    const registerBtn = document.querySelector('[data-page="register"]');
-    if (registerBtn) {
-        registerBtn.click();
-    }
+    showPage("register");
 }
+
 function updateResults() {
-    const votes = JSON.parse(localStorage.getItem('votes')) || [];
-    if (votes.length > 0) {
-        const voteCounts = {
-            'Candidate A': 0,
-            'Candidate B': 0,
-            'Candidate C': 0
-        };
-        votes.forEach(vote => {
-            if (voteCounts.hasOwnProperty(vote.candidate)) {
-                voteCounts[vote.candidate]++;
-            }
-        });
-        const totalVotes = Object.values(voteCounts).reduce((a, b) => a + b, 0);
-        const candidates = ['Candidate A', 'Candidate B', 'Candidate C'];
-        const resultItems = document.querySelectorAll('.result-item');
-        resultItems.forEach((item, index) => {
-            const candidateName = candidates[index];
-            const count = voteCounts[candidateName] || 0;
-            const percentage = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
-            const progressFill = item.querySelector('.progress-fill');
-            const voteCount = item.querySelector('.vote-count');
-            if (progressFill) {
-                progressFill.style.width = percentage + '%';
-            }
-            if (voteCount) {
-                voteCount.textContent = `${count} votes (${percentage}%)`;
-            }
-        });
-        const totalVotesElement = document.querySelector('.total-votes p:first-child strong');
-        if (totalVotesElement) {
-            totalVotesElement.textContent = totalVotes.toString();
-        }
-    }
+    const votes = JSON.parse(localStorage.getItem("votes")) || [];
+
+    if (votes.length === 0) return;
+
+    let counts = {
+        "Candidate A": 0,
+        "Candidate B": 0,
+        "Candidate C": 0,
+    };
+
+    votes.forEach(v => {
+        if (counts[v.candidate] != null) counts[v.candidate]++;
+    });
+
+    const total = votes.length;
+
+    document.querySelectorAll(".result-item").forEach((item, index) => {
+        const name = Object.keys(counts)[index];
+        const count = counts[name];
+        const percentage = Math.round((count / total) * 100);
+
+        item.querySelector(".progress-fill").style.width = percentage + "%";
+        item.querySelector(".vote-count").textContent = `${count} votes (${percentage}%)`;
+    });
+
+    document.querySelector(".total-votes strong").textContent = total;
 }
-window.clearAllData = function() {
-    if (confirm('Are you sure you want to clear all registration and voting data?')) {
-        localStorage.removeItem('registeredVoters');
-        localStorage.removeItem('currentVoter');
-        localStorage.removeItem('votes');
-        currentVoter = null;
-        disableVoting();
-        document.getElementById('registerForm').reset();
-        showRegistrationStatus('All data cleared.', 'success');
-    }
+
+/* -----------------------------------------
+   ADMIN: CLEAR ALL DATA
+--------------------------------------------- */
+
+window.clearAllData = function () {
+    if (!confirm("Clear all data?")) return;
+
+    localStorage.clear();
+    currentVoter = null;
+    disableVoting();
+    document.getElementById("registerForm").reset();
+    showRegistrationStatus("All data cleared.", "success");
 };
