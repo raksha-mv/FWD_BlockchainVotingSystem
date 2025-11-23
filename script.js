@@ -1,7 +1,53 @@
+
 let polls = JSON.parse(localStorage.getItem("polls")) || [];
 let registeredVoters = JSON.parse(localStorage.getItem('registeredVoters')) || [];
 let currentVoter = JSON.parse(localStorage.getItem('currentVoter')) || null;
 let currentPollIdHome = null;
+
+// Detect poll ID from URL on page load (for QR code scans)
+window.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const pollId = urlParams.get('poll');
+  
+  if (pollId) {
+    // User scanned QR code or clicked poll link
+    const poll = polls.find(p => p.id === pollId);
+    
+    if (poll) {
+      // Set current poll and show registration
+      currentPollIdHome = pollId;
+      
+      // Navigate to home page
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      
+      const homeNav = document.querySelector('.nav-btn[data-page="home"]');
+      const homePage = document.getElementById('home');
+      
+      if (homeNav) homeNav.classList.add('active');
+      if (homePage) homePage.classList.add('active');
+      
+      // Show registration form directly
+      hideAllHomeSections();
+      document.getElementById("homeRegisterSection").style.display = "block";
+      
+      // Scroll to registration
+      setTimeout(() => {
+        const regSection = document.getElementById("homeRegisterSection");
+        if (regSection) {
+          regSection.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
+      }, 300);
+      
+      console.log(`Poll detected from QR scan: ${poll.title}`);
+    } else {
+      alert('Poll not found. Please check the link or QR code.');
+    }
+  }
+});
 
 // Navigation logic for page switching
 document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -59,6 +105,7 @@ function hideAllHomeSections() {
   document.getElementById("homeVoteSection").style.display = "none";
 }
 
+
 // -------- CREATE POLL LOGIC --------
 function removeCandidateHome(btn) {
   let container = document.getElementById("candidateFieldsHome");
@@ -110,10 +157,29 @@ if (addCandidateBtnHome && createPollFormHome) {
     const pollId = 'poll-' + Date.now();
     polls.push({ id: pollId, title: pollTitle, candidates: candidateNames });
     localStorage.setItem("polls", JSON.stringify(polls));
-    showPollCreationStatus("Poll created successfully!", "success");
+    
     const url = `${window.location.origin}${window.location.pathname}?poll=${pollId}`;
     document.getElementById("pollLinkHome").value = url;
+    
+    // Clear previous QR code if exists
+    const qrcodeContainer = document.getElementById('qrcode');
+    if (qrcodeContainer) {
+      qrcodeContainer.innerHTML = '';
+      
+      // Generate QR Code
+      new QRCode(qrcodeContainer, {
+        text: url,
+        width: 200,
+        height: 200,
+        colorDark: "#212836",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    }
+    
     document.getElementById('pollLinkSectionHome').style.display = 'block';
+    showPollCreationStatus("Poll created successfully!", "success");
+    
     createPollFormHome.reset();
     let fieldsContainer = document.getElementById("candidateFieldsHome");
     while (fieldsContainer.children.length > 2) {
@@ -122,6 +188,14 @@ if (addCandidateBtnHome && createPollFormHome) {
     Array.from(fieldsContainer.querySelectorAll(".remove-candidate-btn")).forEach(b => {
       b.style.display = "none";
     });
+    
+    // Scroll to QR code section
+    setTimeout(() => {
+      const pollLinkSection = document.getElementById('pollLinkSectionHome');
+      if (pollLinkSection) {
+        pollLinkSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 300);
   }
 }
 
@@ -136,10 +210,41 @@ function showPollCreationStatus(msg, type) {
 function copyPollLinkHome() {
   const inp = document.getElementById("pollLinkHome");
   inp.select();
-  document.execCommand("copy");
-  alert("Link copied!");
+  inp.setSelectionRange(0, 99999); // For mobile devices
+  
+  // Modern clipboard API with fallback
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(inp.value).then(() => {
+      alert("✓ Link copied to clipboard!");
+    }).catch(() => {
+      // Fallback for older browsers
+      document.execCommand("copy");
+      alert("✓ Link copied!");
+    });
+  } else {
+    // Fallback for older browsers
+    document.execCommand("copy");
+    alert("✓ Link copied!");
+  }
 }
 window.copyPollLinkHome = copyPollLinkHome;
+
+// Download QR Code as image
+function downloadQRCode() {
+  const qrCanvas = document.querySelector('#qrcode canvas');
+  if (qrCanvas) {
+    const url = qrCanvas.toDataURL("image/png");
+    const link = document.createElement('a');
+    link.download = 'poll-qr-code.png';
+    link.href = url;
+    link.click();
+    alert("✓ QR code downloaded!");
+  } else {
+    alert('QR code not found. Please create a poll first.');
+  }
+}
+window.downloadQRCode = downloadQRCode;
+
 
 // -------- VOTE BY LINK LOGIC --------
 document.getElementById("goToRegisterHome").onclick = function () {
