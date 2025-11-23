@@ -1,4 +1,3 @@
-
 let polls = JSON.parse(localStorage.getItem("polls")) || [];
 let registeredVoters = JSON.parse(localStorage.getItem('registeredVoters')) || [];
 let currentVoter = JSON.parse(localStorage.getItem('currentVoter')) || null;
@@ -105,7 +104,6 @@ function hideAllHomeSections() {
   document.getElementById("homeVoteSection").style.display = "none";
 }
 
-
 // -------- CREATE POLL LOGIC --------
 function removeCandidateHome(btn) {
   let container = document.getElementById("candidateFieldsHome");
@@ -154,21 +152,22 @@ if (addCandidateBtnHome && createPollFormHome) {
       showPollCreationStatus("Title and at least two candidates required.", "error");
       return;
     }
+    
     const pollId = 'poll-' + Date.now();
     polls.push({ id: pollId, title: pollTitle, candidates: candidateNames });
     localStorage.setItem("polls", JSON.stringify(polls));
     
-    const url = `${window.location.origin}${window.location.pathname}?poll=${pollId}`;
-    document.getElementById("pollLinkHome").value = url;
+    // ✅ GITHUB PAGES URL
+    const pollUrl = `https://raksha-mv.github.io/FWD_BlockchainVotingSystem/?poll=${pollId}`;
     
-    // Clear previous QR code if exists
+    document.getElementById("pollLinkHome").value = pollUrl;
+    
+    // Generate QR Code
     const qrcodeContainer = document.getElementById('qrcode');
     if (qrcodeContainer) {
       qrcodeContainer.innerHTML = '';
-      
-      // Generate QR Code
       new QRCode(qrcodeContainer, {
-        text: url,
+        text: pollUrl,
         width: 200,
         height: 200,
         colorDark: "#212836",
@@ -245,7 +244,6 @@ function downloadQRCode() {
 }
 window.downloadQRCode = downloadQRCode;
 
-
 // -------- VOTE BY LINK LOGIC --------
 document.getElementById("goToRegisterHome").onclick = function () {
   const link = document.getElementById("pollLinkInputHome").value.trim();
@@ -275,10 +273,10 @@ if (registerFormHome) {
   registerFormHome.addEventListener('submit', function (e) {
     e.preventDefault();
     const voterName = document.getElementById('voterNameHome').value.trim();
-    const voterId = document.getElementById('voterIdHome').value.trim();
     const email = document.getElementById('emailHome').value.trim();
     const walletAddress = document.getElementById('walletAddressHome').value.trim();
-    if (!voterName || !voterId || !email || !walletAddress) {
+    
+    if (!voterName || !email || !walletAddress) {
       showRegistrationStatusHome('All fields are required.', 'error');
       return;
     }
@@ -286,22 +284,26 @@ if (registerFormHome) {
       showRegistrationStatusHome('Enter a valid email.', 'error');
       return;
     }
-    const voterExists = registeredVoters.some(voter => voter.voterId === voterId);
+    
+    // Check if wallet address already registered
+    const voterExists = registeredVoters.some(voter => voter.walletAddress === walletAddress);
     if (voterExists) {
-      showRegistrationStatusHome('Voter ID already registered. Use another.', 'error');
+      showRegistrationStatusHome('This wallet address is already registered. Use another.', 'error');
       return;
     }
+    
     const newVoter = {
       name: voterName,
-      voterId: voterId,
       email: email,
       walletAddress: walletAddress,
       timestamp: new Date().toISOString()
     };
+    
     registeredVoters.push(newVoter);
     currentVoter = newVoter;
     localStorage.setItem('registeredVoters', JSON.stringify(registeredVoters));
     localStorage.setItem('currentVoter', JSON.stringify(currentVoter));
+    
     showRegistrationStatusHome('Registration successful! Proceed to vote.', 'success');
     setTimeout(() => {
       hideAllHomeSections();
@@ -310,6 +312,7 @@ if (registerFormHome) {
     registerFormHome.reset();
   });
 }
+
 function showRegistrationStatusHome(message, type) {
   const statusElement = document.getElementById('registrationStatusHome');
   statusElement.textContent = message;
@@ -343,6 +346,7 @@ function showVoteCandidatesHome() {
   form.querySelector(".candidates-grid")?.remove();
   form.insertBefore(grid, form.querySelector("button[type=submit]"));
 }
+
 const voteFormHome = document.getElementById('voteFormHome');
 if (voteFormHome) {
   voteFormHome.addEventListener('submit', function (e) {
@@ -351,28 +355,33 @@ if (voteFormHome) {
       alert("Select a poll and register first.");
       return;
     }
+    
     let votes = JSON.parse(localStorage.getItem('votes')) || [];
-    if (votes.some(v => v.voterId === currentVoter.voterId && v.pollId === currentPollIdHome)) {
-      alert('You have already voted for this poll!');
+    
+    // Check if wallet address already voted in this poll
+    if (votes.some(v => v.walletAddress === currentVoter.walletAddress && v.pollId === currentPollIdHome)) {
+      alert('You have already voted in this poll!');
       return;
     }
+    
     const selectedCandidate = voteFormHome.querySelector("input[name='candidate']:checked");
     if (!selectedCandidate) {
       alert('Please select a candidate.');
       return;
     }
+    
     const candidateName = selectedCandidate.value;
     const vote = {
       pollId: currentPollIdHome,
       voter: currentVoter.name,
-      voterId: currentVoter.voterId,
       candidate: candidateName,
       walletAddress: currentVoter.walletAddress,
       timestamp: new Date().toISOString()
     };
+    
     votes.push(vote);
     localStorage.setItem('votes', JSON.stringify(votes));
-    alert(`Your vote for ${candidateName} has been recorded securely.`);
+    alert(`Your vote for ${candidateName} has been recorded securely on the blockchain.`);
     voteFormHome.reset();
   });
 }
@@ -391,23 +400,28 @@ if (resultsAccessForm) {
     e.preventDefault();
     resultsAccessMsg.style.display = "none";
     const address = walletAddressResults.value.trim();
+    
     if (!address) {
       showResultsAccessMsg("Please enter your blockchain wallet address.", "error");
       return;
     }
+    
     const votes = JSON.parse(localStorage.getItem('votes')) || [];
     const votedPollIds = votes.filter(v => v.walletAddress === address).map(v => v.pollId);
+    
     if (votedPollIds.length === 0) {
-      showResultsAccessMsg("You must vote at least once (with this address) to access results.", "error");
+      showResultsAccessMsg("You must vote at least once (with this wallet address) to access results.", "error");
       allResultsSection.style.display = "none";
       return;
     }
+    
     eligiblePolls = polls.filter(poll => votedPollIds.includes(poll.id));
     if (eligiblePolls.length === 0) {
-      showResultsAccessMsg("No eligible polls found for this address.", "error");
+      showResultsAccessMsg("No eligible polls found for this wallet address.", "error");
       allResultsSection.style.display = "none";
       return;
     }
+    
     showResultsAccessMsg("Access granted. Select a poll to view results.", "success");
     renderResultsPollList(address);
     allResultsSection.style.display = "block";
@@ -463,6 +477,7 @@ window.viewPollResults = function(pollId, address) {
   resultsGridSection.innerHTML = html;
   document.getElementById("totalVotesCount").textContent = totalVotes.toString();
 };
+
 // Footer navigation links
 document.querySelectorAll('.footer-link').forEach(link => {
   link.addEventListener('click', (e) => {
