@@ -9,14 +9,14 @@
 <body>
   <div class="background-animation"></div>
   <header>
-  <nav class="navbar">
-    <h1 class="logo">Blockchain Voting System</h1>
-    <ul class="nav-links">
-      <li><a href="#" class="nav-btn active" data-page="home">Home</a></li>
-      <li><a href="#" class="nav-btn" data-page="results">Results</a></li>
-    </ul>
-  </nav>
-</header>
+    <nav class="navbar">
+      <h1 class="logo">Blockchain Voting System</h1>
+      <ul class="nav-links">
+        <li><a href="#" class="nav-btn active" data-page="home">Home</a></li>
+        <li><a href="#" class="nav-btn" data-page="results">Results</a></li>
+      </ul>
+    </nav>
+  </header>
   <main>
     <div class="content-container">
       <!-- Home Page -->
@@ -50,16 +50,12 @@
               <input type="text" id="voterNameHome" placeholder="Name" required>
             </div>
             <div class="form-group">
-              <label for="voterIdHome">Voter ID</label>
-              <input type="text" id="voterIdHome" placeholder="Voter ID" required>
-            </div>
-            <div class="form-group">
               <label for="emailHome">Email</label>
               <input type="email" id="emailHome" placeholder="Email" required>
             </div>
             <div class="form-group">
-              <label for="walletAddressHome">Wallet Address</label>
-              <input type="text" id="walletAddressHome" placeholder="Wallet Address" required>
+              <label for="walletAddressHome">Blockchain Wallet Address</label>
+              <input type="text" id="walletAddressHome" placeholder="Enter your wallet address" required>
             </div>
             <button type="submit" class="btn-primary big-btn">Register & Vote</button>
           </form>
@@ -101,29 +97,31 @@
             <button type="submit" class="btn-primary big-btn">Create Poll</button>
           </form>
           <div id="pollLinkSectionHome" style="display:none;">
-  <div style="text-align: center; margin-top: 2rem;">
-    <p style="font-size: 1.2rem; color: var(--success-pastel); font-weight: 600;">✓ Poll created successfully!</p>
-    
-    <!-- QR Code Display -->
-    <div style="background: white; padding: 1.5rem; border-radius: 16px; display: inline-block; margin: 1.5rem 0;">
-      <div id="qrcode" style="display: flex; justify-content: center;"></div>
-    </div>
-    
-    <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Scan QR code to vote or share the link:</p>
-    
-    <!-- Poll Link -->
-    <div class="form-group">
-      <input type="text" id="pollLinkHome" readonly style="width:100%; text-align: center; font-size: 0.95rem;">
-    </div>
-    
-    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-      <button type="button" class="btn-secondary big-btn" onclick="copyPollLinkHome()">📋 Copy Link</button>
-      <button type="button" class="btn-secondary big-btn" onclick="downloadQRCode()">⬇️ Download QR</button>
-    </div>
-  </div>
-</div>
-      
-<!-- Results Section -->
+            <div style="text-align: center; margin-top: 2rem;">
+              <p style="font-size: 1.2rem; color: var(--success-pastel); font-weight: 600;">✓ Poll created successfully!</p>
+              
+              <!-- QR Code Display -->
+              <div style="background: white; padding: 1.5rem; border-radius: 16px; display: inline-block; margin: 1.5rem 0;">
+                <div id="qrcode" style="display: flex; justify-content: center;"></div>
+              </div>
+              
+              <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Scan QR code to vote or share the link:</p>
+              
+              <!-- Poll Link -->
+              <div class="form-group">
+                <input type="text" id="pollLinkHome" readonly style="width:100%; text-align: center; font-size: 0.95rem;">
+              </div>
+              
+              <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <button type="button" class="btn-secondary big-btn" onclick="copyPollLinkHome()">📋 Copy Link</button>
+                <button type="button" class="btn-secondary big-btn" onclick="downloadQRCode()">⬇️ Download QR</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Results Section -->
       <section id="results" class="page">
         <div class="glass-card results-card">
           <h2>Election Results</h2>
@@ -149,27 +147,27 @@
     </div>
   </main>
   <footer>
-  <div class="footer-content">
-    <div class="footer-section">
-      <h4>About</h4>
-      <p>Decentralized blockchain voting platform with transparency, security, and fairness.</p>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h4>About</h4>
+        <p>Decentralized blockchain voting platform with transparency, security, and fairness.</p>
+      </div>
+      <div class="footer-section">
+        <h4>Quick Links</h4>
+        <ul>
+          <li><a href="#" data-page="home" class="footer-link">Home</a></li>
+          <li><a href="#" data-page="results" class="footer-link">Results</a></li>
+          <li><a href="https://github.com/raksha-mv/FWD_BlockchainVotingSystem" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+          <li><a href="https://docs.example.com" target="_blank" rel="noopener noreferrer">Documentation</a></li>
+        </ul>
+      </div>
     </div>
-    <div class="footer-section">
-      <h4>Quick Links</h4>
-      <ul>
-        <li><a href="#" data-page="home" class="footer-link">Home</a></li>
-        <li><a href="#" data-page="results" class="footer-link">Results</a></li>
-        <li><a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-        <li><a href="https://docs.example.com" target="_blank" rel="noopener noreferrer">Documentation</a></li>
-      </ul>
+    <div class="footer-bottom">
+      &copy; 2025 Blockchain Voting System.
     </div>
-  </div>
-  <div class="footer-bottom">
-    &copy; 2025 Blockchain Voting System.
-  </div>
-</footer>
-<!-- QR Code Library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="script.js"></script>
+  </footer>
+  <!-- QR Code Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
